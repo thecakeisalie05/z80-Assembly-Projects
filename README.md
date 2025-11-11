@@ -1,40 +1,55 @@
-# Z80 assembler integration for this workspace
+# Z80 assembler helper for this workspace
 
-This workspace includes a small VS Code task and a PowerShell helper to run a Z80 assembler on the current `.asm` file.
+A lightweight helper and VS Code task to assemble a single Z80 `.asm` file into a `.bin` next to the source file.
 
-What was added
-- `.vscode/tasks.json` — a Build task called "Assemble Z80" that runs the helper on the current file.
-- `tools/assemble.ps1` — PowerShell script that finds an assembler (sjasmplus, pasmo, or z80asm) and runs it to produce a `.bin` file next to the input.
+What this workspace contains
+- `.vscode/tasks.json` — a Build task named "Assemble Z80" that runs the PowerShell helper on the active editor file.
+- `tools/assemble.ps1` — PowerShell helper that finds a supported assembler and invokes it to produce a binary output beside the `.asm`.
 
-How to get a Z80 assembler (Windows)
-1. Recommended: sjasmplus (featureful, common for ZX Spectrum dev).
-   - Project: https://github.com/z00m128/sjasmplus
-   - Download the Windows release and put `sjasmplus.exe` into the `tools` folder of this repo (create it if missing), or add it to your PATH.
-2. Simpler alternative: pasmo (small raw binary assembler).
-   - Project: https://github.com/michaliskambi/pasmo (or search for Pasmo builds)
-3. Other: z80asm (check its usage and available builds).
+Supported assemblers (checked in this order)
+1. sjasmplus (featureful; recommended)
+2. pasmo
+3. z80asm
 
-You can also set environment variables to point directly to an executable:
-- `SJASMPLUS` -> full path to sjasmplus.exe
-- `PASMO` -> full path to pasmo.exe
-- `Z80ASM` -> full path to z80asm.exe
+How the helper chooses an assembler
+- First it checks environment variables (full path allowed): `SJASMPLUS`, `PASMO`, `Z80ASM`.
+- If none set, it looks for `sjasmplus.exe`, `pasmo.exe`, or `z80asm.exe` in `tools/` then in the system PATH.
+- Once found, it runs the assembler with sensible defaults to create `yourfile.bin` in the same folder as `yourfile.asm`.
 
-Usage
-1. Put your `.asm` file anywhere in the workspace (for example `projects/helloworld/helloworld.asm`).
-2. In VS Code open the file and run the task: Run Task -> "Assemble Z80" (or press Ctrl+Shift+B if prompted).
-3. The helper will attempt to find an assembler and produce `helloworld.bin` in the same folder as the `.asm`.
+Environment variables and flags
+- SJASMPLUS, PASMO, Z80ASM — point to a specific assembler executable (full path or just the exe name).
+- ASFLAGS — optional. If present, its contents are appended to the assembler command line (useful for adding custom assembler flags).
 
-If the task fails
-- Make sure you have an assembler binary in `tools/` or installed in PATH.
-- Run the helper manually from PowerShell to see more messages:
+Usage (VS Code)
+1. Open any `.asm` file from the workspace (for example `projects/helloworld/helloworld.asm`).
+2. Run the task: Run Task -> "Assemble Z80" (or press Ctrl+Shift+B if prompted).
+3. The script will choose an assembler and produce `helloworld.bin` next to the `.asm`.
 
+Manual invocation (PowerShell)
+Run the helper directly to see detailed output:
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\assemble.ps1 .\projects\helloworld\helloworld.asm
 ```
+You can set environment variables inline if needed:
+```powershell
+$env:SJASMPLUS = "C:\tools\sjasmplus.exe"
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\assemble.ps1 .\projects\helloworld\helloworld.asm
+```
 
-Custom arguments
-- The helper currently chooses sensible defaults. If you need custom assembler flags, you can edit `tools/assemble.ps1` and add a branch for your assembler with the desired flags.
+Troubleshooting
+- If the task fails, ensure an assembler binary is in `tools/` or available on PATH.
+- Run the helper manually (see above) to view its detection and invocation messages.
+- If you need special assembler flags or produce listings/map files, set `ASFLAGS` or edit `tools/assemble.ps1` to add an assembler-specific branch with your preferred flags.
+
+Getting an assembler on Windows
+- Recommended: sjasmplus — https://github.com/z00m128/sjasmplus — download the Windows release and put `sjasmplus.exe` into `tools/` or add it to PATH.
+- Alternative: pasmo — https://github.com/michaliskambi/pasmo
+- Other: z80asm — check usage and available builds.
 
 Next steps (optional)
-- Add a convenience download script to fetch sjasmplus releases automatically.
-- Add problem matchers or assembler-specific task variants to produce listings and map files.
+- Add a small script to download sjasmplus releases into `tools/`.
+- Extend tasks.json with assembler-specific tasks that produce listings, map files or different outputs.
+- Add problem matchers for assembler error parsing.
+
+License / notes
+- The helper aims to be minimal and editable — edit `tools/assemble.ps1` to tweak flags, outputs, or support other assemblers.

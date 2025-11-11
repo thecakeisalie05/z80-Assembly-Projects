@@ -17,6 +17,15 @@ pushinpbuf
         RET
 
 
+; Name:                 reminpbuf
+; Function:             Remove the last value from the input buffer, i.e. backspace. This is pretty much just an alias at this point
+; Inputs:               none
+; Outputs:              none
+reminpbuf
+        CALL dechead                    ; Decrement the head pointer
+        RET
+
+
 ; Name:                 pullinpbuf
 ; Function:             pull the next value from the input buffer
 ; Inputs:               none
@@ -79,6 +88,20 @@ overptr
 doneincptr
         RET
 
+; Name:                 decringptr
+; Function:             decrement register B in a closed loop of 64
+; Inputs:               Reg B
+; Outputs:              Reg B
+decringptr
+        DEC B
+        CP -1
+        JR Z, underptr
+        JR donedecptr
+underptr
+        LD B, #63
+donedecptr
+        RET
+
 ; Name:                 inchead
 ; Function:             increment the head pointer
 ; Inputs:               none
@@ -88,6 +111,19 @@ inchead
         LD HL, buf_hptr
         LD B, (HL)
         CALL incringptr
+        LD (HL), B
+        POP BC
+        RET
+
+; Name:                 dechead
+; Function:             decrement the head pointer
+; Inputs:               none
+; Outputs:              none
+dechead
+        PUSH BC
+        LD HL, buf_hptr
+        LD B, (HL)
+        CALL decringptr
         LD (HL), B
         POP BC
         RET
@@ -119,9 +155,13 @@ parsenext
         CALL pullinpbuf
         CP ENTER
         JR Z, enterhandle
+        CP BACKSPACE
+        JR Z, backhandle
         JR endparse
 enterhandle
         CALL signal
+backhandle
+        CALL reminpbuf
 endparse
         RET
 
