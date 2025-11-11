@@ -31,6 +31,11 @@ termbuf         EQU 1044h               ; The terminal input line buffer: 64 byt
 endres          EQU 1084h
 
 
+; definitions of keystrokes
+ENTER           EQU 0Dh
+BACKSPACE       EQU 08h
+
+
 
 ; This is where we actually build the vector table
 ORG vectable + 4
@@ -58,6 +63,7 @@ include "PIO.asm"
 include "ISR.asm"
 include "mem.asm"
 include "inp.asm"
+include "misc.asm"
 
 init
         ; set interrupt mode to 2 (vector table)
@@ -70,28 +76,28 @@ init
         LD A, HIGH(vectable)
         LD I, A
 
-       
-
-        LD A, #00
-        LD B, #00
-        
-                                ; A simple loop that tests the input buffer (by overflowing it slightly)
-mainloop
+        LD B, #FF
         CALL pushinpbuf
-        INC A
-        INC B
-        CP 70
-        JR Z, endmainloop
-        JR mainloop
-endmainloop
+        LD B, #EE
+        CALL pushinpbuf
+        LD B, #DD
+        CALL pushinpbuf
+        LD B, #0D
+        CALL pushinpbuf
+
+        CALL getbuflen
+        LD B, A
+        CALL writepa
+
+        CALL pullinpbuf
         
         
 idle
+        CALL parsenext
         JR idle
 
 
 
-; this is a test to make sure git works for me
 
 
 

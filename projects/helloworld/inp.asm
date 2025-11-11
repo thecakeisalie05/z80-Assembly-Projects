@@ -22,7 +22,47 @@ pushinpbuf
 ; Inputs:               none
 ; Outputs:              Reg A
 pullinpbuf
-        LD HL, #0
+        PUSH HL
+        PUSH DE
+        LD D, #0                        ; (thank you copilot) get rid of undefined shit in D
+        LD HL, buf_tptr                 ; Locate the tail pointer
+        LD E, (HL)                      ; Store the tail pointer in E
+        LD HL, keybuf                   ; Now actually go to the buffer
+        ADD HL, DE                      ; Move to the tail location
+        LD A, (HL)                      ; Store our value
+        CALL inctail                    ; Increment the head pointer
+        POP DE
+        POP HL
+        RET
+
+; Name:                 getbuflen
+; Function:             gets the length of the input buffer
+; Inputs:               none
+; Outputs:              Reg A
+getbuflen
+        LD HL, buf_tptr
+        LD C, (HL)
+        LD HL, buf_hptr
+        LD A, (HL)
+        SUB C
+        RET
+
+; Name:                 getbufstatus
+; Function:             gets the status of the input buffer
+; Inputs:               none
+; Outputs:              Reg A
+getbufstatus
+        CALL getbuflen
+        CP 0
+        JR Z, emptybuf
+        JR nostatus
+emptybuf
+        LD A, #FF
+        JR endstatus
+nostatus
+        LD A, #00
+        JR endstatus
+endstatus      
         RET
 
 ; Name:                 incringptr
@@ -67,5 +107,22 @@ inctail
 
 
 
+
+; Name:                 parsenext
+; Function:             parse the next character from the input buffer
+; Inputs:               none
+; Outputs:              Reg A
+parsenext
+        CALL getbufstatus
+        CP #FF
+        JR Z, endparse
+        CALL pullinpbuf
+        CP ENTER
+        JR Z, enterhandle
+        JR endparse
+enterhandle
+        CALL signal
+endparse
+        RET
 
 
