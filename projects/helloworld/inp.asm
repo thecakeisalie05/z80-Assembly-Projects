@@ -5,7 +5,7 @@
 pushinpbuf
         PUSH HL
         PUSH DE
-        LD D, #0                        ; (thank you copilot) get rid of undefined shit in D
+        LD D, #0                        ; (thank you copilot) get rid of undefined sh*t in D
         LD HL, buf_hptr                 ; Locate the head pointer
         LD E, (HL)                      ; Store the head pointer in E
         LD HL, keybuf                   ; Now actually go to the buffer
@@ -33,7 +33,7 @@ reminpbuf
 pullinpbuf
         PUSH HL
         PUSH DE
-        LD D, #0                        ; (thank you copilot) get rid of undefined shit in D
+        LD D, #0                        ; (thank you copilot) get rid of undefined sh*t in D
         LD HL, buf_tptr                 ; Locate the tail pointer
         LD E, (HL)                      ; Store the tail pointer in E
         LD HL, keybuf                   ; Now actually go to the buffer
